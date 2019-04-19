@@ -49,7 +49,7 @@ class Fetcher(object):
 	def submitQuery(self,SubmitElement):
 		SubmitElement.click()
 
-	def getFare(self,FromStationValue,ToStationValue,waitTime=2):
+	def getFare(self,FromStationValue,ToStationValue,waitTime=10):
 
 		try:
 			FromStationInput = self.getElementById(waitTime,
@@ -74,7 +74,7 @@ class Fetcher(object):
 			print(e)
 
 
-	def getStationList(self,waitTime=2):
+	def getStationList(self,waitTime=10):
 
 		StnList = self.getElementById(waitTime,"ctl00_MainContent_ddlFrom")
 		optList = StnList.find_elements_by_tag_name("option")
@@ -123,7 +123,7 @@ class Fetcher(object):
 
 		size = len(stationList)
 		for i in range(i,j):
-			for j in range(5):
+			for j in range(size):
 				fare = self.getFare(stationList[i],stationList[j])
 				if fare != None:
 					line = stationList[i]+"->"+stationList[j]+"->"+str(fare)+"\n"
@@ -131,6 +131,34 @@ class Fetcher(object):
 
 		f.close()
 		self.driver.close()
+
+
+import os 
+
+def isExist(fileName):
+	if os.path.exists(fileName):
+		return True
+	else:
+		return False
+
+
+def delFile(fileName):
+	if os.path.exists(fileName):
+		os.remove(fileName)
+	else:
+		print(fileName+" doesn't exist .. \n")
+
+def validFile(i,j):
+	fileName = "fare/fareList"+str(i)+".csv"
+	f = open(fileName,"r")
+	i = 0
+
+	while i < j:
+		if f.readline() == "":
+			break
+		i += 1
+
+	return i==j
 
 # single processed 
 def run(choice,i,j):
@@ -142,9 +170,12 @@ def run(choice,i,j):
 		res = f.getStationList()
 
 	if choice == 2:
-		f.setUrl(url)
-		stationList = f.readStationData()
-		f.writeFareList(stationList,i,j)
+		fileName = "fare/fareList"+str(i)+".csv"
+
+		if(isExist(fileName)==False):
+			f.setUrl(url)
+			stationList = f.readStationData()
+			f.writeFareList(stationList,i,j)
 
 
 
@@ -154,15 +185,13 @@ import multiprocessing as mp
 
 def runMulti(i): 
     # creating processes 
-    # browserCount, bc
 
 	p1 = mp.Process(target=run, 
 		args=(2,i,i+1))
 
 	p2 = mp.Process(target=run, 
-		args=(2,i+2,i+3))
+		args=(2,i+1,i+2))
 
-	
 	p1.start()
 	p2.start()
 				
@@ -174,9 +203,53 @@ def runserver(i):
 	runMulti(i)
 	end = time.time()
 
-	print("multiprocessing : "+str(float(end - start))+" sec ")
+	print("Time for Station "+str(i)+" is ")
+	print(end-start)
+	print("\n")
 
-def wipe(i):
-	f
 
-runserver(0)
+
+def startSync(init,limit):
+
+	lock = mp.Lock()
+	startT = time.time()
+	'''
+	for i in range(init,limit,2):
+		lock.acquire()
+		runserver(i)
+		lock.release()
+		time.sleep(5)
+	'''
+	i = 0
+	inval = []
+
+	while i < limit:
+		fileName = "fare/fareList"+str(i)+".csv"
+		if(isExist(fileName)):
+			if(validFile(i,224) == False):
+				inval.append(fileName)
+		i += 1
+
+	f = open("logger.txt","a")
+	for x in inval:
+		f.write(x)
+		delFile(x)
+		f.write("\n")
+
+	startE = time.time()
+
+	f.write(str(startE)+"\n\n")
+	f.close()
+	
+	
+
+	print("Total Time")
+	print(startE - startT)
+
+init = 0
+limit = 20
+
+startSync(init,limit)
+
+
+
