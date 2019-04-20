@@ -213,13 +213,13 @@ def startSync(init,limit):
 
 	lock = mp.Lock()
 	startT = time.time()
-	'''
+	
 	for i in range(init,limit,2):
 		lock.acquire()
 		runserver(i)
 		lock.release()
 		time.sleep(5)
-	'''
+	
 	i = 0
 	inval = []
 
