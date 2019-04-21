@@ -21,18 +21,6 @@ def readStationData():
 	return stationList
 
 
-def createMainFareList(stationList):
-	size = len(stationList)
-	f = open("fareList.csv","w")
-
-	fare = "Null"
-	for i in range(size):
-		for j in range(size):
-			line = stationList[i]+"->"+stationList[j]+"->"+fare+"\n"
-			f.write(line)
-
-	f.close()
-
 def isExist(fileName,parentFolder):
 	fileName = parentFolder+"/"+fileName
 	if os.path.exists(fileName):
@@ -42,32 +30,67 @@ def isExist(fileName,parentFolder):
 
 
 def updateFareList(stationList):
+
 	size = len(stationList)
-	f = open("fareList.csv","r+")
+	print(size)
+	f = open("fareList.csv","w")
+
+	ctr = 0
+	ctr2 = 0
+
+	fareList = []
+	hm = dict()
 
 	for i in range(size):
 		
 		fileName = "fareList"+str(i)+".csv"
-
 		if(isExist(fileName,"fare")):
-			
-			fInner = open("fare/"+fileName,"r+")
+			ctr += 1 
+			fInner = open("fare/"+fileName,"r")
 			# write it ..
 			for j in range(size):
-				f.write(fInner.readline())
+				line = fInner.readline()
+				lineArr = line.split("->")
+				
+				a = lineArr[0]
+				b = lineArr[1]
+				c = lineArr[2]
+				
+				q = sorted([a,b])
+				q = q[0]+"->"+q[1]
+				hm[q] = c
+
+				fareList.append(line)
+				f.write(line)
+
+			fInner.close()
 		else:
-			# skip it ..
-			for i in range(size):
-				f.readline()
+			ctr2 += 1
+			for j in range(size):
 
-def run(choice):
+				a = stationList[i]
+				b = stationList[j]
+
+				q = sorted([a,b])
+				q = q[0]+"->"+q[1]
+
+				if hm.get(q) is not None:
+					fare = str(int(hm.get(q)))
+				line = a+"->"+b+"->"+fare+"\n"
+
+				fareList.append(line)
+				f.write(line) 
+		
+	print(ctr)
+	print(ctr2)
+	f.close()
+
+def run():
 	stationList = readStationData()
-	if choice == "c":
-		createMainFareList(stationList)
-	if choice == "u":	
-		updateFareList(stationList)
-		print("patch successful .. \n")
+	updateFareList(stationList)
+	print("patch successful .. \n")
 
-run("u")
+run()
+
 
 
